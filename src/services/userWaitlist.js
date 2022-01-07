@@ -8,7 +8,6 @@ class UserWaitlist {
 
     async get(email) {
         if(this.waitlist.has(email)) {
-            log.debug('Email is in cache');
             return this.waitlist.get(email);
         }
 
