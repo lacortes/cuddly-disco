@@ -16,9 +16,9 @@ class UserWaitlist {
         
         if (userDB) {
             log.debug('Adding email to cache');
-            this.waitlist.set(email, userDB.isValid);
+            this.waitlist.set(email, userDB);
         }
-        return userDB;
+        return this.waitlist.get(email);
     }
 
     async isInWaitlist(email) {
