@@ -9,6 +9,7 @@ const log = require('./utils/logger');
 const morgan = require('./utils/morganLogger');
 
 const PORT = appConfig.port;
+const NODE_ENV = appConfig.node_env;
 
 const app = express();
 
@@ -16,7 +17,7 @@ const initExpress = () => {
     app.use(morgan);
     app.use(helmet());
     app.use(cors({
-        origin: '*'
+        origin: setUpCors()
     }));
     app.use(express.json());
 
@@ -24,7 +25,7 @@ const initExpress = () => {
     app.use('/api', apiRouter);
     app.use('/auth', authRouter);
 
-
+    log.info('env: ' + NODE_ENV)
     app.listen(PORT, () => {
         log.info(`Server is listening on port : ${PORT}`);
     });
@@ -40,6 +41,10 @@ const initApp = async () => {
         log.error(`... error on startup!!!, error: ${ e }`);
         process.exit(1);
     }
+}
+
+const setUpCors = () => {
+    return NODE_ENV === 'production' ? 'https://www.karly-capstone.com' : '*';
 }
 
 initApp();
