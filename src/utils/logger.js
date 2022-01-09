@@ -20,8 +20,8 @@ const getTransports = () => {
     if (level() === 'debug') {
         transports.push(new winston.transports.Console());
     } else {
-        transports.push(new winston.transports.File({ filename: 'error.log', level: 'error' }));
-        transports.push(new winston.transports.File({ filename: 'app.log' }));
+        transports.push(new winston.transports.File({ filename: 'logs/error.log', level: 'error' }));
+        transports.push(new winston.transports.File({ filename: 'logs/app.log' }));
     }
     return transports;
 };

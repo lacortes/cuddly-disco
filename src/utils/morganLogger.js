@@ -1,5 +1,7 @@
 const morgan = require('morgan');
 const logger = require('./logger');
+const fs = require('fs');
+const path = require('path');
 
 const stream = {
     write: message => logger.http(message)
@@ -10,9 +12,18 @@ const skip = () => {
     return env !== "development";
 };
 
+const format = '[:date[web]] :remote-addr - ":method :url" :status :res[content-length] - :response-time ms';
 const morganLogger = morgan(
-    'tiny',
-    { stream, skip}
+    format, 
+    { 
+        stream: fs.createWriteStream(path.join(__basedir, 'logs/access.log')), 
+        skip: () => false
+    }
 );
 
-module.exports = morganLogger;
+const morganConsoleLogger = morgan(
+    format,
+    { stream, skip }
+);
+
+module.exports = { morganLogger, morganConsoleLogger };
