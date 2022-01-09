@@ -6,7 +6,11 @@ const authRouter = require('./routes/auth');
 const cors = require('cors');
 const MongoDB = require('./db');
 const log = require('./utils/logger');
-const morgan = require('./utils/morganLogger');
+
+const path = require('path');
+global.__basedir = path.join(__dirname, '..');
+
+const { morganLogger, morganConsoleLogger } = require('./utils/morganLogger')
 
 const PORT = appConfig.port;
 const NODE_ENV = appConfig.node_env;
@@ -14,7 +18,8 @@ const NODE_ENV = appConfig.node_env;
 const app = express();
 
 const initExpress = () => {
-    app.use(morgan);
+    app.use(morganLogger);
+    app.use(morganConsoleLogger);
     app.use(helmet());
     app.use(cors({
         origin: setUpCors()
@@ -32,7 +37,6 @@ const initExpress = () => {
 };
 
 const initApp = async () => {
-    
     log.info("Initializing Application ...");
     try {
         await MongoDB.init();
