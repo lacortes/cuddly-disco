@@ -16,7 +16,7 @@ const format = '[:date[web]] :remote-addr - ":method :url" :status :res[content-
 const morganLogger = morgan(
     format, 
     { 
-        stream: fs.createWriteStream(path.join(__basedir, 'logs/access.log')), 
+        stream: fs.createWriteStream(path.join(__basedir, 'logs/access.log'), 'w'), 
         skip: () => false
     }
 );
