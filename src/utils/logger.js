@@ -20,11 +20,14 @@ const getTransports = () => {
     if (level() === 'debug') {
         transports.push(new winston.transports.Console());
     } else {
-        transports.push(new winston.transports.File({ filename: 'logs/error.log', level: 'error' }));
-        transports.push(new winston.transports.File({ filename: 'logs/app.log' }));
+        // No write for now
+        // transports.push(new winston.transports.File({ filename: 'logs/error.log', level: 'error' }));
+        // transports.push(new winston.transports.File({ filename: 'logs/app.log' }));
     }
     return transports;
 };
+
+const logFormat = ({ timestamp, level, message, stack }) => `${timestamp} ${level} ${stack || message}`;
 
 const colors = {
     error: 'red',
@@ -39,9 +42,8 @@ winston.addColors(colors);
 const format = winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
     winston.format.colorize({ all: true }),
-    winston.format.printf(
-      (info) => `${info.timestamp} ${info.level}: ${info.message}`,
-    ),
+    winston.format.errors({ stack: true }),
+    winston.format.printf(logFormat),
 )
 
 const logger = winston.createLogger({
