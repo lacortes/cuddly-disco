@@ -45,7 +45,6 @@ class EmailService {
                 log.debug(`Unable to validate email: ${ data }`);
                 return null;
             }
-            log.debug(typeof data);
             const obj = { email, emailStatus: data.status, isValid: data.status === 'valid' };
             log.debug(obj);
             return obj;
