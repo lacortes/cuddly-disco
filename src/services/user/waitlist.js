@@ -23,25 +23,27 @@ function makeWaitlist({ db, log }) {
             if (!email || isValid === undefined || !emailStatus) {
                 return false;
             }
-    
+
+            const emailRecord = {
+                email, 
+                isValid,
+                emailStatus,
+                signUpDate: Date.now(),
+                lastNotifiedAt: null
+            };
+
             const emailDB = await db.insertOne(
                 "capstone", 
-                "user_waitlist", {
-                    email, 
-                    isValid,
-                    emailStatus,
-                    signUpDate: Date.now(),
-                    lastNotifiedAt: null
-                }
+                "user_waitlist", 
+                emailRecord
             );
             
-            if (!emailDB) {
+            if (!emailDB || !emailDB.acknowledged) {
                 log.warn(`Unable to insert to DB, email: ${ email }`);
                 return false;
             }
             
-            waitlist.set(email, emailDB);
-    
+            waitlist.set(email, emailRecord);    
             return true;
         }
         
