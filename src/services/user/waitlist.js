@@ -39,7 +39,7 @@ function makeWaitlist({ db, log }) {
             );
             
             if (!emailDB || !emailDB.acknowledged) {
-                log.warn(`Unable to insert to DB, email: ${ email }`);
+                log.warn(`Unable to insert to user_waitlist DB, email: ${ email }`);
                 return false;
             }
             

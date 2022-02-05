@@ -51,6 +51,7 @@ class MongoDB {
 
     async init() {
         try {
+            log.info("Initializing MongoDB ...");
             await this.dbConn.connect();
             await this.dbConn.db("admin").command({ ping: 1 });
 

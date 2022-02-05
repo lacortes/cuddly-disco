@@ -4,17 +4,18 @@ const validator = require('validator');
 const userService = require('../services/users');
 const userWaitList = require('../services/user/index');
 const passGen = require('../utils/password');
-const emailService = require('../services/emailService');
-const log = require('../utils/logger');
+const { emailList, emailValidator } = require('../services/email/index');
 
 const router = express.Router();
 
 router.use(helmet());
 
 const validateEmail = (req, res, next) => {
-    if (!validator.isEmail(req.body.email)) {
+    const { email } = req.body;
+    if (email && !validator.isEmail(email)) {
         res.status(400).json({
-            ok: false
+            ok: false, 
+            message: "Email Invalid!"
         });
         return;
     }
@@ -22,10 +23,53 @@ const validateEmail = (req, res, next) => {
 };
 
 router.post('/request-access', validateEmail, async (req, res) => {
-    const { email } = req.body;
+    const { email, first_name, last_name } = req.body;
+
+    if (!validator.isAlpha(first_name) || !validator.isAlpha(last_name)) {
+        res.status(400).json({
+            ok: false,
+            message: "Invalid first / last name"
+        });
+        return;
+    }
+
+    let isValidEmail = false;
+    if (await emailList.has(email)) {
+        const emailDB = await emailList.get(email);
+        isValidEmail = emailDB.isValid ?? false;
+    } else {
+        const emailValidation = await emailValidator.validate(email);
+        if (emailValidation == null) {
+            res.status(500).json({
+                ok: false,
+                message: "Internal error"
+            });
+            return; 
+        }
+
+        await emailList.add(email, emailValidation);
+        isValidEmail = emailValidation.isValid;
+    }
+
+    if (isValidEmail === false) {
+        res.status(400).json({
+            ok: false, 
+            message: "Email Invalid!"
+        });
+        return;
+    }
+    
+    const requestExists = await userService.userExists(email);
+    if (requestExists) {
+        res.status(200).json({
+            ok: true,
+            message: "Request for access already submitted"
+        });
+        return;
+    }
 
     const pass = passGen.generate();
-    const created = await userService.createUser(email, pass);
+    const created = await userService.createUser(email, first_name, last_name, pass);
     if (!created) {
         res.status(400).json({
             ok: false,
@@ -36,6 +80,7 @@ router.post('/request-access', validateEmail, async (req, res) => {
 
     res.status(201).json({
         ok: true,
+        message: 'Request has been submitted',
         pass: `${pass}`
     });
 });
@@ -56,7 +101,7 @@ router.post('/email-sign-up', validateEmail, async (req, res) => {
         return; 
     }
 
-    const emailValidation = await emailService.validateEmailAddress(email);
+    const emailValidation = await emailValidator.validate(email);
     if (emailValidation == null) {
         res.status(400).json({
             ok: false,

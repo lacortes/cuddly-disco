@@ -1,9 +1,22 @@
 const bcrypt = require('bcrypt');
 const MongoDB = require('../db');
+const log = require('../utils/logger');
 
 class UserService {
     constructor() {
         this.users = new Map();
+    }
+
+    async get(email) {
+        if (this.users.has(email)) {
+            return this.users.get(email);
+        }
+
+        const userDB = await this.getUserDB(email);
+        if (userDB) {
+            this.users.set(email, userDB);
+        }
+        return userDB;
     }
 
     async getUserDB(email) {
@@ -14,8 +27,8 @@ class UserService {
         return await this.getUserDB(email) !== null;
     }
 
-    async createUser(email, pass) { 
-        if (!pass || !email) {
+    async createUser(email, firstName, lastName, pass) { 
+        if (!pass || !email || !firstName || !lastName) {
             return false;
         }
 
@@ -26,15 +39,25 @@ class UserService {
         
         const salt = await bcrypt.genSalt();
         const hashed = await bcrypt.hash(pass, salt);
+
+        const userRecord = {
+            email,
+            hashedPass: hashed,
+            passCreated: Date.now()
+        };
         
-        await MongoDB.insertOne(
+        const userDB = await MongoDB.insertOne(
             "capstone", 
-            "user", {
-                email,
-                hashedPass: hashed,
-                passCreated: Date.now()
-            }
+            "user", 
+            userRecord
         );
+
+        if (!userDB || !userDB.acknowledged) {
+            log.warn(`Unable to insert to DB, user: ${ { email, firstName, lastName } }`);
+            return false;
+        }
+
+        this.users.set(email, userRecord);
         
         return true;
     }
