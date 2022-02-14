@@ -4,7 +4,8 @@ const validator = require('validator');
 const userService = require('../services/users');
 const userWaitList = require('../services/user/index');
 const passGen = require('../utils/password');
-const { emailList, emailValidator } = require('../services/email/index');
+const { emailList, emailValidator, emailService } = require('../services/email/index');
+const EmailEvent = require('../services/email/email_event');
 
 const router = express.Router();
 
@@ -77,6 +78,12 @@ router.post('/request-access', validateEmail, async (req, res) => {
         });
         return;
     }
+
+    emailService.sendEmail(
+        email, 
+        EmailEvent.RequestAccess, 
+        { firstName: first_name, password: pass }
+    );
 
     res.status(201).json({
         ok: true,

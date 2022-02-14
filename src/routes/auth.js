@@ -4,7 +4,7 @@ const validator = require('validator');
 const MongoDB = require('../services/users');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const appConfig = require('../config/app');
+const { JWT_SECRET_KEY } = require('../config/app');
 
 const router = express.Router();
 router.use(helmet());
@@ -42,7 +42,7 @@ router.post('/login', validateLogin, async (req, res) => {
         return;
     }
 
-    const token = jwt.sign({ email }, appConfig.jwt_secret_key, { expiresIn: "12h" });
+    const token = jwt.sign({ email }, JWT_SECRET_KEY, { expiresIn: "12h" });
 
     res.json({
         ok: true,
