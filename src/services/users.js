@@ -41,6 +41,8 @@ class UserService {
         const hashed = await bcrypt.hash(pass, salt);
 
         const userRecord = {
+            firstName, 
+            lastName,
             email,
             hashedPass: hashed,
             passCreated: Date.now()

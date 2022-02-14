@@ -1,5 +1,5 @@
 const express = require('express');
-const appConfig = require('./config/app');
+const { PORT, NODE_ENV } = require('./config/app');
 const helmet = require('helmet');
 const apiRouter = require('./routes/api');
 const authRouter = require('./routes/auth');
@@ -11,9 +11,6 @@ const path = require('path');
 global.__basedir = path.join(__dirname, '..');
 
 const { morganLogger, morganConsoleLogger } = require('./utils/morganLogger')
-
-const PORT = appConfig.port;
-const NODE_ENV = appConfig.node_env;
 
 const app = express();
 

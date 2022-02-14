@@ -1,9 +1,10 @@
 const dotenv = require('dotenv').config();
 
 module.exports = {
-    port: process.env.PORT,
-    db_uri: process.env.DB_URI,
-    jwt_secret_key: process.env.JWT_SECRET_KEY,
-    email_key: process.env.EMAIL_KEY,
-    node_env: process.env.NODE_ENV
+    PORT: process.env.PORT,
+    DB_URI: process.env.DB_URI,
+    JWT_SECRET_KEY: process.env.JWT_SECRET_KEY,
+    EMAIL_KEY: process.env.EMAIL_KEY,
+    NODE_ENV: process.env.NODE_ENV || 'development',
+    AWS_SES_FROM: process.env.AWS_SES_FROM,
 };

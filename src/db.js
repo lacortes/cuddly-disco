@@ -1,12 +1,10 @@
-const appConfig = require('./config/app');
+const { DB_URI } = require('./config/app');
 const { MongoClient } = require('mongodb');
 const log = require('./utils/logger');
 
-const uri = appConfig.db_uri;
-
 class MongoDB {
     constructor() {
-        this.dbConn = new MongoClient(uri);
+        this.dbConn = new MongoClient(DB_URI);
     }
 
     async insertOne(database="", collection="", doc={}) {
