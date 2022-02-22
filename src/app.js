@@ -1,9 +1,13 @@
 const express = require('express');
-const { PORT, NODE_ENV } = require('./config/app');
+const https = require('https');
+const fs = require('fs');
+const cors = require('cors');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+
+const { PORT, NODE_ENV } = require('./config/app');
 const apiRouter = require('./routes/api');
 const authRouter = require('./routes/auth');
-const cors = require('cors');
 const MongoDB = require('./db');
 const log = require('./utils/logger');
 
@@ -19,18 +23,18 @@ const initExpress = () => {
     app.use(morganConsoleLogger);
     app.use(helmet());
     app.use(cors({
-        origin: setUpCors()
+        origin: setUpCors(),
+        credentials: true
     }));
     app.use(express.json());
+    app.use(cookieParser());
 
     // Routes
     app.use('/api', apiRouter);
     app.use('/auth', authRouter);
 
     log.info('env: ' + NODE_ENV)
-    app.listen(PORT, () => {
-        log.info(`Server is listening on port : ${PORT}`);
-    });
+    setupAppListen();
 };
 
 const initApp = async () => {
@@ -44,8 +48,33 @@ const initApp = async () => {
     }
 }
 
+const setupAppListen = () => {
+    if (NODE_ENV === 'production') {
+        app.listen(PORT, () => {
+            log.info(`Server is listening on port : ${PORT}`);
+        });
+    } else {
+        const keyPath = `${ __basedir }/ssl/api.karly-capstone.dev-key.pem`;
+        const certPath = `${ __basedir }/ssl/api.karly-capstone.dev.pem`;
+
+        log.info(`Reading SSL cert key : ${ keyPath }`);
+        log.info(`Reading SSL cert     : ${ certPath }`);
+
+        const key = fs.readFileSync(keyPath, 'utf-8');
+        const cert = fs.readFileSync(certPath, 'utf-8');
+        const options = {
+            key: key,
+            cert: cert
+        };
+
+        https.createServer(options, app)
+             .listen(PORT, 'api.karly-capstone.dev', () => log.info(`HTTPS Server is listening on port : ${PORT}`))
+        ;
+    }
+}
+
 const setUpCors = () => {
-    return NODE_ENV === 'production' ? 'https://www.karly-capstone.com' : '*';
+    return NODE_ENV === 'production' ? 'https://www.karly-capstone.com' : 'https://karly-capstone.dev:3000';
 }
 
 initApp();

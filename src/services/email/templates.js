@@ -34,7 +34,7 @@ class RequestAccess extends Template {
             Hi ${ firstName },
             <br>
             <br>
-            Below you will find your password. This password will expire within <b>7 days</b>.
+            Below you will find your password. This password will expire within 7 days.
             <br>
             <br>
             <code>${password}</code>

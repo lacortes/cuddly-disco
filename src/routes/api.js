@@ -6,24 +6,13 @@ const userWaitList = require('../services/user/index');
 const passGen = require('../utils/password');
 const { emailList, emailValidator, emailService } = require('../services/email/index');
 const EmailEvent = require('../services/email/email_event');
+const { validateRequestAccess, validateSignUp } = require('./validation/validators');
 
 const router = express.Router();
 
 router.use(helmet());
 
-const validateEmail = (req, res, next) => {
-    const { email } = req.body;
-    if (email && !validator.isEmail(email)) {
-        res.status(400).json({
-            ok: false, 
-            message: "Email Invalid!"
-        });
-        return;
-    }
-    next();
-};
-
-router.post('/request-access', validateEmail, async (req, res) => {
+router.post('/request-access', validateRequestAccess, async (req, res) => {
     const { email, first_name, last_name } = req.body;
 
     if (!validator.isAlpha(first_name) || !validator.isAlpha(last_name)) {
@@ -92,7 +81,7 @@ router.post('/request-access', validateEmail, async (req, res) => {
     });
 });
 
-router.post('/email-sign-up', validateEmail, async (req, res) => {
+router.post('/email-sign-up', validateSignUp, async (req, res) => {
     const { email } = req.body;
 
     const user = await userWaitList.get(email);
