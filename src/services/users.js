@@ -45,7 +45,7 @@ class UserService {
             lastName,
             email,
             hashedPass: hashed,
-            passCreated: Date.now()
+            passCreated: new Date()
         };
         
         const userDB = await MongoDB.insertOne(
