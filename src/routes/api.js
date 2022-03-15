@@ -1,6 +1,7 @@
 const express = require('express');
 const helmet = require('helmet');
 const validator = require('validator');
+const linkService = require('../services/links');
 const userService = require('../services/users');
 const userWaitList = require('../services/user/index');
 const passGen = require('../utils/password');
@@ -68,10 +69,19 @@ router.post('/request-access', validateRequestAccess, async (req, res) => {
         return;
     }
 
+    const magicLink = await linkService.createLink(email);
+    if (!magicLink) {
+        res.status(400).json({
+            ok: false,
+            message: "Unable to create magic link"
+        });
+        return;
+    }
+
     emailService.sendEmail(
         email, 
         EmailEvent.RequestAccess, 
-        { firstName: first_name, password: pass }
+        { firstName: first_name, password: pass, magicLink: magicLink }
     );
 
     res.status(201).json({

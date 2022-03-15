@@ -2,6 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const validator = require('validator');
 const MongoDB = require('../services/users');
+const linkService = require('../services/links');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET_KEY, JWT_REF_SECRET_KEY, NODE_ENV } = require('../config/app');
@@ -21,6 +22,21 @@ const validateLogin = (req, res, next) => {
 
     next();
 };
+
+router.post('/magic', async (req, res) => {
+    const link = req.query.link;
+    const linkRecord = await linkService.getLink(link);
+    if (!linkRecord) {
+        res.status(401).json({
+            ok: false,
+            message: 'Invalid magic link!'
+        });
+        return;
+    }
+    linkService.updateLinkAsUsed(linkRecord);
+
+    setTokensAndRespond(res, linkRecord.email)
+});
 
 router.post('/login', validateLogin, async (req, res) => {
     const { email, pass } = req.body;
