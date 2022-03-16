@@ -1,14 +1,28 @@
 const express = require('express');
 const helmet = require('helmet');
+const multer = require('multer');
 const validator = require('validator');
 const userService = require('../services/users');
 const userWaitList = require('../services/user/index');
+const { s3Service } = require('../services/resource-mgmt/index');
 const passGen = require('../utils/password');
 const { emailList, emailValidator, emailService } = require('../services/email/index');
 const EmailEvent = require('../services/email/email_event');
 const { validateRequestAccess, validateSignUp } = require('./validation/validators');
 
 const router = express.Router();
+const upload = multer({ 
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype !== 'application/pdf') {
+            cb(null, false);
+            return;
+        }
+        cb(null, true);
+    }, 
+    limits: {
+        fileSize: 3_000_000 // 3mb
+    }
+});
 
 router.use(helmet());
 
@@ -125,6 +139,62 @@ router.post('/email-sign-up', validateSignUp, async (req, res) => {
     res.status(201).json({
         ok: true
     });
+});
+
+router.post('/resume-upload', upload.single('resume'), async (req, res) => {
+    const { file } = req;
+
+    if (!file || !file.buffer) {
+        res.status(500).json({
+            ok: false
+        });
+        return;
+    }
+    
+    try {
+        await s3Service.upload({ file: file.buffer });
+    } catch (err) {
+        res.status(500).json({
+            ok: false,
+            message: 'Unable to upload file!'
+        });
+        return;
+    }
+    
+    res.status(200).json({
+        ok: true
+    });
+});
+
+router.get('/resume-download', async (req, res) => {
+
+    let file = null;
+    try {
+        file = await s3Service.getFile({
+            filename: '',
+        });
+    } catch (err) {
+        res.status(500).json({
+            ok: false,
+            message: 'Servor error'
+        });
+        return;
+    }
+
+    if (file == null || !file.Body) {
+        res.status(500).json({
+            ok: false,
+            message: 'File not found!'
+        });
+        return;
+    }
+
+    const fileName = encodeURIComponent('karly-resume.pdf');
+    res.status(200)
+        .setHeader('Content-Disposition', `attachment; filename="${ fileName }"`)
+        .setHeader('Content-type', 'application/pdf')
+    ;
+    file.Body.pipe(res);
 });
 
 module.exports = router;

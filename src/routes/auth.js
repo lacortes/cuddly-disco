@@ -66,11 +66,11 @@ const setTokensAndRespond = (res, email) => {
     ).status(200).json({
         ok: true,
         access_token, 
-        expiry: minutesFromNow(15).toUTCString()
+        expiry: minutesFromNow(15).toUTCString(),
     });
 }
 
-router.get('/is-authorized', (req, res) => {
+router.get('/is-authorized', async (req, res) => {
 
     const authHeader = req.header('Authorization');
     const strTokens = !authHeader ? [] : authHeader.split(' ', 2); // 'Bearer asd324jxdfh'
@@ -81,9 +81,26 @@ router.get('/is-authorized', (req, res) => {
         return;
     }
 
+    let val;
     try {
-        const val = jwt.verify(strTokens[1], JWT_SECRET_KEY, { maxAge: "15m" });
+        val = jwt.verify(strTokens[1], JWT_SECRET_KEY, { maxAge: "15m" });
     } catch (err) {
+        res.status(401).json({
+            ok: false
+        });
+        return;
+    }
+
+    const { email } = val;
+    if (!email) {
+        res.status(401).json({
+            ok: false
+        });
+        return;
+    }
+
+    const user = await MongoDB.get(email);
+    if (!user) {
         res.status(401).json({
             ok: false
         });
