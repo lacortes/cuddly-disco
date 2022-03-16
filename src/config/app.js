@@ -8,4 +8,5 @@ module.exports = {
     EMAIL_KEY: process.env.EMAIL_KEY,
     NODE_ENV: process.env.NODE_ENV || 'development',
     AWS_SES_FROM: process.env.AWS_SES_FROM,
+    AWS_S3_BUCKET_ARN: process.env.AWS_S3_BUCKET_ARN,
 };
