@@ -29,7 +29,7 @@ class RequestAccess extends Template {
 
     getHTML({ firstName, password, magicLink }) {
         const isProd = NODE_ENV === 'production';
-        const loginLink = isProd ? 'https://www.karly-capstone.com' : 'http://localhost:3010';
+        const loginLink = isProd ? 'https://www.karly-capstone.com' : 'https://karly-capstone.dev:3000';
         const fullLink = loginLink + '/magic?' + magicLink;
         return `
             Hi ${ firstName },

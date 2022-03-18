@@ -4,23 +4,22 @@ const bcrypt = require('bcrypt');
 
 class LinkService {
     constructor() {
-        this.links = new Map();
+        this.tokens = new Map();
     }
 
     async createLink(email) {
-        var link;
-        if (!email || this.links.has(email)) {
+        let link;
+        if (!email || this.tokens.has(email)) {
             return link;
         }
 
         const salt = await bcrypt.genSalt();
         const hashed = await bcrypt.hash(email, salt);
-        var params = new URLSearchParams();
-        params.append('link', hashed);
+        const encodedToken =  encodeURI(hashed);
 
         const linkRecord = {
             email: email,
-            param: params.toString(),
+            link: hashed,
         }
         const linkDB = await MongoDB.insertOne(
             "capstone",
@@ -32,32 +31,33 @@ class LinkService {
             return link;
         }
 
-        link = params.toString();
-        this.links.set(link, linkRecord);
+        link = 'link=' + encodedToken;
+        this.tokens.set(encodedToken, linkRecord);
         return link;
     }
 
-    async getLink(link) {
-        if (this.links.has(link)) {
-            return this.links.get(link);
+    async getLink(token) {
+        if (this.tokens.has(token)) {
+            return this.tokens.get(token);
         }
 
-        const linkDB = await MongoDB.findOne("capstone", "link", { link });
+        const linkDB = await MongoDB.findOne("capstone", "link", { token });
         if (linkDB) {
-            this.links.set(link, linkRecord);
+            this.tokens.set(token, linkRecord);
         }
         return linkDB;
     }
 
     async updateLinkAsUsed(linkRecord) {
-        const linkCache = this.links.get(link);
+        const link = linkRecord.link;
+        const linkCache = this.tokens.get(link);
         if (linkCache) {
-            this.links.delete(link);
+            this.tokens.delete(link);
         }
 
-        const result = await MongoDB.removeOne({linkRecord});
-        if (result !== 1) {
-            log.warn(`Unable to remove from DB, link: ${ linkRecord }`);
+        const result = await MongoDB.removeOne("capstone", "link", {link: linkRecord.link});
+        if (!result || !result.acknowledged) {
+            log.warn(`Unable to remove from DB, link: ${ linkRecord.link }`);
             return false;
         }
         return true;
