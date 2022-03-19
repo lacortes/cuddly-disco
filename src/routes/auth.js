@@ -2,7 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const validator = require('validator');
 const MongoDB = require('../services/users');
-const linkService = require('../services/links');
+const { magicLink } = require('../services/link/index');
 const log = require('../utils/logger');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -27,7 +27,7 @@ const validateLogin = (req, res, next) => {
 
 router.post('/magic', validateToken, async (req, res) => {
     const { token } = req.body;
-    const linkRecord = await linkService.getLink(token);
+    const linkRecord = await magicLink.get(token);
     if (!linkRecord) {
         res.status(401).json({
             ok: false,
@@ -35,7 +35,7 @@ router.post('/magic', validateToken, async (req, res) => {
         });
         return;
     }
-    linkService.updateLinkAsUsed(linkRecord);
+    await magicLink.update(linkRecord);
 
     setTokensAndRespond(res, linkRecord.email);
 
