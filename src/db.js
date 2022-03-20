@@ -19,6 +19,12 @@ class MongoDB {
         });
     }
 
+    async removeOne(database="", collection="", query={}) {
+        return await this.connect(database, collection, async c => {
+            return await c.deleteOne(query);
+        });
+    }
+
     async connect(database, collection, act) {
 
         if (!database || !collection) {

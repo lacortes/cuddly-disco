@@ -3,6 +3,7 @@ const Joi = require('joi');
 const email = Joi.string().email().required();
 const name = Joi.string().trim().pattern(/^[a-zA-Z]+$/).min(1).required();
 const password = Joi.string().trim().length(12).required();
+const token = Joi.string().required();
 
 const requestAccess = Joi.object({
     email,
@@ -17,6 +18,10 @@ const emailSignUp = Joi.object({
 const login = Joi.object({
     email,
     pass: password
+});
+
+const magicLink = Joi.object({
+    token,
 });
 
 const makeValidate = (joiSchema, opts = {}) => {
@@ -39,4 +44,5 @@ module.exports = {
     validateRequestAccess: makeValidate(requestAccess),
     validateSignUp: makeValidate(emailSignUp),
     validateLogin: makeValidate(login),
+    validateToken: makeValidate(magicLink),
 };

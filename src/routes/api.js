@@ -2,6 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const multer = require('multer');
 const validator = require('validator');
+const { magicLink } = require('../services/link/index');
 const userService = require('../services/users');
 const userWaitList = require('../services/user/index');
 const { s3Service } = require('../services/resource-mgmt/index');
@@ -82,10 +83,19 @@ router.post('/request-access', validateRequestAccess, async (req, res) => {
         return;
     }
 
+    const link = await magicLink.add(email);
+    if (!link) {
+        res.status(400).json({
+            ok: false,
+            message: "Unable to create link"
+        });
+        return;
+    }
+
     emailService.sendEmail(
         email, 
         EmailEvent.RequestAccess, 
-        { firstName: first_name, password: pass }
+        { firstName: first_name, password: pass, link }
     );
 
     res.status(201).json({

@@ -27,9 +27,10 @@ class RequestAccess extends Template {
         super("Karly-Capstone Password");
     }
 
-    getHTML({ firstName, password }) {
+    getHTML({ firstName, password, link }) {
         const isProd = NODE_ENV === 'production';
-        const loginLink = isProd ? 'https://www.karly-capstone.com' : 'http://localhost:3010';
+        const loginLink = isProd ? 'https://www.karly-capstone.com' : 'https://karly-capstone.dev:3000';
+        const fullLink = loginLink + '/magic?' + link;
         return `
             Hi ${ firstName },
             <br>
@@ -40,7 +41,7 @@ class RequestAccess extends Template {
             <code>${password}</code>
             <br>
             <br>
-            Click <a href="${ loginLink }/login" target="_blank">here</a> to login.
+            Click <a href="${ loginLink }/login" target="_blank">here</a> to login, or click <a href="${ fullLink }" target="_blank">here</a> to log in using a 1-time link.
         `;
     }
 };
