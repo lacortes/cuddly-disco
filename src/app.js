@@ -10,6 +10,7 @@ const apiRouter = require('./routes/api');
 const authRouter = require('./routes/auth');
 const MongoDB = require('./db');
 const log = require('./utils/logger');
+const rateLimit = require('express-rate-limit');
 
 const path = require('path');
 global.__basedir = path.join(__dirname, '..');
@@ -17,6 +18,12 @@ global.__basedir = path.join(__dirname, '..');
 const { morganLogger, morganConsoleLogger } = require('./utils/morganLogger')
 
 const app = express();
+const limiter = rateLimit({
+	windowMs: 60 * 1000, // 1 minute
+	max: 500, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 
 const initExpress = () => {
     app.use(morganLogger);
@@ -28,6 +35,7 @@ const initExpress = () => {
     }));
     app.use(express.json());
     app.use(cookieParser());
+    app.use(limiter);
 
     // Routes
     app.use('/api', apiRouter);
