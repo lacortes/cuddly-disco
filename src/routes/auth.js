@@ -47,7 +47,7 @@ router.post('/login', validateLogin, async (req, res) => {
     if (!user) {
         res.status(401).json({
             ok: false,
-            message: 'Invalid credentials!'
+            message: 'Invalid email or password'
         });
         return;
     }
@@ -67,7 +67,7 @@ router.post('/login', validateLogin, async (req, res) => {
     if (!authenticated) {
         res.status(401).json({
             ok: false,
-            message: 'Invalid credentials!'
+            message: 'Invalid email or password'
         });
         return;
     }
