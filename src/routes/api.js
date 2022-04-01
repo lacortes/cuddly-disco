@@ -2,10 +2,12 @@ const express = require('express');
 const helmet = require('helmet');
 const multer = require('multer');
 const validator = require('validator');
+const MongoDB = require('../db');
 const { magicLink } = require('../services/link/index');
 const userService = require('../services/users');
 const userWaitList = require('../services/user/index');
 const { s3Service } = require('../services/resource-mgmt/index');
+const { resumeService } = require('../services/resume/index');
 const passGen = require('../utils/password');
 const { emailList, emailValidator, emailService } = require('../services/email/index');
 const EmailEvent = require('../services/email/email_event');
@@ -162,7 +164,7 @@ router.post('/resume-upload', upload.single('resume'), async (req, res) => {
     }
     
     try {
-        await s3Service.upload({ file: file.buffer });
+        await resumeService.upload(file.buffer);
     } catch (err) {
         res.status(500).json({
             ok: false,
@@ -176,13 +178,11 @@ router.post('/resume-upload', upload.single('resume'), async (req, res) => {
     });
 });
 
-router.get('/resume-download', async (req, res) => {
+router.get('/resume-download', async (_, res) => {
 
     let file = null;
     try {
-        file = await s3Service.getFile({
-            filename: '',
-        });
+        file = await resumeService.download();
     } catch (err) {
         res.status(500).json({
             ok: false,
@@ -207,4 +207,4 @@ router.get('/resume-download', async (req, res) => {
     file.Body.pipe(res);
 });
 
-module.exports = router;
+module.exports = router;    
