@@ -3,7 +3,6 @@ const helmet = require('helmet');
 const validator = require('validator');
 const MongoDB = require('../services/users');
 const { magicLink } = require('../services/link/index');
-const log = require('../utils/logger');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { validateToken } = require('./validation/validators');
@@ -105,7 +104,8 @@ router.get('/is-authorized', async (req, res) => {
         val = jwt.verify(strTokens[1], JWT_SECRET_KEY, { maxAge: "15m" });
     } catch (err) {
         res.status(401).json({
-            ok: false
+            ok: false,
+            msg: 'Invalid token'
         });
         return;
     }
@@ -127,7 +127,8 @@ router.get('/is-authorized', async (req, res) => {
     }
 
     res.status(200).json({
-        ok: true
+        ok: true,
+        isAdmin: user?.isAdmin ?? false
     });
 });
 

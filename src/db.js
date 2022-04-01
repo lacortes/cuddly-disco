@@ -25,6 +25,18 @@ class MongoDB {
         });
     }
 
+    async replaceOne(database="", collection="", filter={}, replacement, options={}) {
+        return await this.connect(database, collection, async c => {
+            return await c.replaceOne(filter, replacement, options);
+        });
+    }
+
+    async deleteOne(database="", collection="", filter={}) {
+        return await this.connect(database, collection, async c => {
+            return await c.deleteOne(filter);
+        });
+    }
+
     async connect(database, collection, act) {
 
         if (!database || !collection) {

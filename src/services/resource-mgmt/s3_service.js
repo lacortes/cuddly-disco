@@ -2,16 +2,30 @@ function makeS3Service({ s3, cmd, bucket, uuid, log }) {
     
     return function s3Service() {
 
-        const upload = async ({ file, path='', extension='' }) => {
+        const contentTypeMap = {
+            pdf: 'application/pdf'
+        };
+
+        const upload = async ({ file, path='', extension='', contentType=''}) => {
             if (!file) {
                 log.info('Cannot upload with no file');
                 return false;
             }
-            return sendCommand(new cmd.PutObjectCommand({
+            const key = `${ path }${ uuid() }${ extension ? '.'+extension : '' }`;
+            let response = await sendCommand(new cmd.PutObjectCommand({
                 Bucket: bucket,
                 Body: file,
-                Key: `${ path }${ uuid() }${ extension ? '.'+extension : '' }`
+                ContentType: contentTypeMap[contentType],
+                Key: key
             }));
+
+            if (!response) {
+                log.warn(`Cannot upload file : ${ file }`);
+                return Promise.reject();
+            }
+
+            log.info(response);
+            return Promise.resolve(key);
         }
 
         const getFile = async ({ filename, path='' }) => {
