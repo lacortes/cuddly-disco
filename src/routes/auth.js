@@ -8,6 +8,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { validateToken } = require('./validation/validators');
 const { JWT_SECRET_KEY, JWT_REF_SECRET_KEY, NODE_ENV } = require('../config/app');
+const { isAuthorized } = require('./validation/authorization');
 
 const router = express.Router();
 router.use(helmet());
@@ -89,42 +90,7 @@ const setTokensAndRespond = (res, email) => {
     });
 }
 
-router.get('/is-authorized', async (req, res) => {
-
-    const authHeader = req.header('Authorization');
-    const strTokens = !authHeader ? [] : authHeader.split(' ', 2); // 'Bearer asd324jxdfh'
-    if (!authHeader || strTokens.length !== 2 || strTokens[0] !== 'Bearer') {
-        res.status(400).json({
-            ok: false
-        });
-        return;
-    }
-
-    let val;
-    try {
-        val = jwt.verify(strTokens[1], JWT_SECRET_KEY, { maxAge: "15m" });
-    } catch (err) {
-        res.status(401).json({
-            ok: false
-        });
-        return;
-    }
-
-    const { email } = val;
-    if (!email) {
-        res.status(401).json({
-            ok: false
-        });
-        return;
-    }
-
-    const user = await MongoDB.get(email);
-    if (!user) {
-        res.status(401).json({
-            ok: false
-        });
-        return;
-    }
+router.get('/is-authorized', isAuthorized, async (req, res) => {
 
     res.status(200).json({
         ok: true

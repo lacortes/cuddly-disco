@@ -10,6 +10,7 @@ const passGen = require('../utils/password');
 const { emailList, emailValidator, emailService } = require('../services/email/index');
 const EmailEvent = require('../services/email/email_event');
 const { validateRequestAccess, validateSignUp } = require('./validation/validators');
+const { isAuthorized } = require('./validation/authorization');
 
 const router = express.Router();
 const upload = multer({ 
@@ -151,7 +152,7 @@ router.post('/email-sign-up', validateSignUp, async (req, res) => {
     });
 });
 
-router.post('/resume-upload', upload.single('resume'), async (req, res) => {
+router.post('/resume-upload', isAuthorized, upload.single('resume'), async (req, res) => {
     const { file } = req;
 
     if (!file || !file.buffer) {
@@ -176,7 +177,7 @@ router.post('/resume-upload', upload.single('resume'), async (req, res) => {
     });
 });
 
-router.get('/resume-download', async (req, res) => {
+router.get('/resume-download', isAuthorized, async (req, res) => {
 
     let file = null;
     try {
