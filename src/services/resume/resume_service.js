@@ -3,10 +3,15 @@ function makeResumeService({ s3Service, db, log }) {
     return function resumeService() {
 
         const upload = async ({ key, file }) => {
+            if (!file) {
+                log.warn('upload service: Cannot upload empty file');
+                Promise.reject(null);
+            }
 
             try {
                 const oldRecord = await db.findOneAndDelete("capstone", "resource", { [key]: { $exists: true } });
-                console.log(oldRecord);
+                
+                log.info(oldRecord);
                 if (!oldRecord || oldRecord.ok == 0) {
                     log.warn(`Unable to remove old resume key from DB`);
                     return Promise.reject();
