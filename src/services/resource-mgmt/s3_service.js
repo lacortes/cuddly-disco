@@ -9,7 +9,7 @@ function makeS3Service({ s3, cmd, bucket, uuid, log }) {
         const upload = async ({ file, path='', extension='', contentType=''}) => {
             if (!file) {
                 log.info('Cannot upload with no file');
-                return false;
+                return Promise.reject();
             }
             const key = `${ path }${ uuid() }${ extension ? '.'+extension : '' }`;
             let response = await sendCommand(new cmd.PutObjectCommand({
@@ -27,6 +27,26 @@ function makeS3Service({ s3, cmd, bucket, uuid, log }) {
             log.info(response);
             return Promise.resolve(key);
         }
+
+        const deleteObj = async ({ key }) => {
+            if (!key) {
+                log.info('Cannot delete with no key');
+                return Promise.reject(key);
+            }
+
+            let response = await sendCommand(new cmd.DeleteObjectCommand({
+                Bucket: bucket,
+                Key: key
+            }));
+
+            if (!response) {
+                log.warn(`Cannot delete file with key: ${ key }`);
+                return Promise.reject(key);
+            }
+
+            log.info(response);
+            return Promise.resolve(key);
+        };
 
         const getFile = async ({ filename, path='' }) => {
             if (!filename) {
@@ -59,6 +79,7 @@ function makeS3Service({ s3, cmd, bucket, uuid, log }) {
     
         return Object.freeze({
             upload,
+            deleteObj,
             getFile
         });
     }
