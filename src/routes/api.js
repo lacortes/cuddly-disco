@@ -2,11 +2,9 @@ const express = require('express');
 const helmet = require('helmet');
 const multer = require('multer');
 const validator = require('validator');
-const MongoDB = require('../db');
 const { magicLink } = require('../services/link/index');
 const userService = require('../services/users');
 const userWaitList = require('../services/user/index');
-const { s3Service } = require('../services/resource-mgmt/index');
 const { resumeService } = require('../services/resume/index');
 const passGen = require('../utils/password');
 const { emailList, emailValidator, emailService } = require('../services/email/index');
@@ -153,8 +151,15 @@ router.post('/email-sign-up', validateSignUp, async (req, res) => {
     });
 });
 
-router.post('/resume-upload', upload.single('resume'), async (req, res) => {
+const allowedResourceKeys = {
+    'resume': true,
+    'culmination': true
+};
+
+router.post('/upload-resource', upload.single('file'), async (req, res) => {
+
     const { file } = req;
+    const { key } = req.body;
 
     if (!file || !file.buffer) {
         res.status(500).json({
@@ -162,9 +167,18 @@ router.post('/resume-upload', upload.single('resume'), async (req, res) => {
         });
         return;
     }
-    
+
+    const allowed = allowedResourceKeys[key] === true;
+    if (!allowed) {
+        res.status(400).json({
+            ok: false,
+            message: 'Invalid key'
+        });
+        return;
+    }
+
     try {
-        await resumeService.upload(file.buffer);
+        await resumeService.upload({ key, file: file.buffer });
     } catch (err) {
         res.status(500).json({
             ok: false,
@@ -172,17 +186,44 @@ router.post('/resume-upload', upload.single('resume'), async (req, res) => {
         });
         return;
     }
-    
+
+
     res.status(200).json({
         ok: true
     });
 });
 
-router.get('/resume-download', async (_, res) => {
+
+router.get('/download-resource', async (req, res) => {
+    const { fileKey } = req.query;
+    
+    if (!fileKey) {
+        res.status(400).json({
+            ok: false
+        });
+        return;
+    }
+
+    const isKeyAllowed = allowedResourceKeys[fileKey] === true;
+    if (!isKeyAllowed) {
+        res.status(400).json({
+            ok: false,
+            message: 'Invalid Key'
+        });
+        return;
+    }
 
     let file = null;
     try {
-        file = await resumeService.download();
+        file = await resumeService.download({ key: fileKey });
+        if (file == null) { 
+            res.status(404).json({
+                ok: false,
+                message: 'No resource found'
+            });
+            return;
+        }
+
     } catch (err) {
         res.status(500).json({
             ok: false,
@@ -199,7 +240,7 @@ router.get('/resume-download', async (_, res) => {
         return;
     }
 
-    const fileName = encodeURIComponent('karly-resume.pdf');
+    const fileName = encodeURIComponent(`karly-${ fileKey }.pdf`);
     res.status(200)
         .setHeader('Content-Disposition', `attachment; filename="${ fileName }"`)
         .setHeader('Content-type', 'application/pdf')
