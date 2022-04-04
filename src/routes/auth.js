@@ -194,7 +194,7 @@ const cookieProps = {
     secure: true,
     httpOnly: true,
     sameSite: 'Lax',
-    domain: 'karly-capstone.dev',
+    domain: isDev ? 'karly-capstone.dev' : 'karly-capstone.com',
     expires: daysFromNow( isDev ? 2 : 7 )
 };
 
