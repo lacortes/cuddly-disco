@@ -95,12 +95,12 @@ router.post('/request-access', validateRequestAccess, async (req, res) => {
     emailService.sendEmail(
         email, 
         EmailEvent.RequestAccess, 
-        { firstName: first_name, password: pass, link }
+        { name: first_name, password: pass, full_link:link }
     );
 
     res.status(201).json({
         ok: true,
-        message: 'Request has been submitted',
+        message: 'Request successful. Check you email.',
         pass: `${pass}`
     });
 });

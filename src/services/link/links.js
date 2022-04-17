@@ -1,4 +1,4 @@
-function createMagicLink({ db, log, bcrypt }) {
+function createMagicLink({ db, log, bcrypt, isProd }) {
     return function() {
         const tokens = new Map();
 
@@ -53,9 +53,13 @@ function createMagicLink({ db, log, bcrypt }) {
                 return link;
             }
     
-            link = 'link=' + encodedToken;
             tokens.set(encodedToken, linkRecord);
-            return link;
+            link = 'link=' + encodedToken;
+
+            const loginLink = true ? 'https://www.karly-capstone.com' : 'https://karly-capstone.dev:3000';
+            const fullLink = loginLink + '/magic?' + link;
+
+            return fullLink;
         }
 
         return Object.freeze({
